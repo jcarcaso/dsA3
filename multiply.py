@@ -14,16 +14,37 @@ def mapper(record):
     # key: document identifier
     # value: document contents
     matrix = record[0]
-    # TODO Figure out where to key on. What's common when multiplying stuff together?
-    mr.emit_intermediate(key, record)
+    if matrix == 'a':
+        row = record[1]
+        for col in range(0,5):
+          mr.emit_intermediate((row,col), record)
+    else:
+        col = record[2]
+        for row in range(0,5):
+          mr.emit_intermediate((row,col), record)
 
 def reducer(key, list_of_values):
     # key: word
     # value: list of occurrence counts
-    total = 0
+    entries = {}
     for v in list_of_values:
-      total += v
-    mr.emit((key, total))
+      if v[0] == 'a':
+          if v[2] not in entries:
+              entries[v[2]] = (v[3], 1)
+          else: 
+              entries[v[2]] = (entries[v[2]][0]*v[3], 2)
+      else:
+          if v[1] not in entries:
+              entries[v[1]] = (v[3], 1)
+          else: 
+              entries[v[1]] = (entries[v[1]][0]*v[3], 2)
+    
+    total = 0
+    for i in range(0,5):
+        if i in entries and entries[i][1] == 2:
+            total+=entries[i][0]
+        
+    mr.emit((key[0], key[1], total))
 
 # Do not modify below this line
 # =============================
